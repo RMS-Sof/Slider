@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Slider Puzzle</title>
+    <style>
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 5px;
+            margin: 20px;
+        }
+
+        .tile {
+            width: 100px;
+            height: 100px;
+            background-color: #4CAF50;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .empty {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        #winMessage {
+            font-size: 24px;
+            color: green;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="board"></div>
+    <button onclick="shuffleTiles()">New Game</button>
+    <div id="winMessage"></div>
+
+    <script>
+        let tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+        let emptyIndex = 8;
+
+        function initGame() {
+            createBoard();
+            shuffleTiles();
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function createBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            
+            tiles.forEach((num, index) => {
+                const tile = document.createElement('div');
+                tile.className = `tile ${num === 0 ? 'empty' : ''}`;
+                tile.textContent = num || '';
+                tile.onclick = () => handleClick(index);
+                board.appendChild(tile);
+            });
+        }
+
+        function handleClick(index) {
+            if (isAdjacent(index, emptyIndex)) {
+                swapTiles(index, emptyIndex);
+                emptyIndex = index;
+                createBoard();
+                checkWin();
+            }
+        }
+
+        function handleKeyPress(e) {
+            let newIndex = -1;
+            switch(e.key) {
+                case 'ArrowLeft':
+                    if (emptyIndex % 3 !== 2) newIndex = emptyIndex + 1;
+                    break;
+                case 'ArrowRight':
+                    if (emptyIndex % 3 !== 0) newIndex = emptyIndex - 1;
+                    break;
+                case 'ArrowUp':
+                    if (emptyIndex < 6) newIndex = emptyIndex + 3;
+                    break;
+                case 'ArrowDown':
+                    if (emptyIndex >= 3) newIndex = emptyIndex - 3;
+                    break;
+            }
+
+            if (newIndex !== -1) {
+                swapTiles(newIndex, emptyIndex);
+                emptyIndex = newIndex;
+                createBoard();
+                checkWin();
+            }
+        }
+
+        function swapTiles(index1, index2) {
+            [tiles[index1], tiles[index2]] = [tiles[index2], tiles[index1]];
+        }
+
+        function isAdjacent(index1, index2) {
+            const row1 = Math.floor(index1 / 3);
+            const col1 = index1 % 3;
+            const row2 = Math.floor(index2 / 3);
+            const col2 = index2 % 3;
+            
+            return (Math.abs(row1 - row2) === 1 && col1 === col2) ||
+                   (Math.abs(col1 - col2) === 1 && row1 === row2);
+        }
+
+        function shuffleTiles() {
+            // Reset to solved state
+            tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+            emptyIndex = 8;
+            
+            // Make 100 random moves
+            for (let i = 0; i < 100; i++) {
+                const adjacent = [];
+                if (emptyIndex % 3 !== 0) adjacent.push(emptyIndex - 1);
+                if (emptyIndex % 3 !== 2) adjacent.push(emptyIndex + 1);
+                if (emptyIndex >= 3) adjacent.push(emptyIndex - 3);
+                if (emptyIndex < 6) adjacent.push(emptyIndex + 3);
+                
+                const randomIndex = adjacent[Math.floor(Math.random() * adjacent.length)];
+                swapTiles(randomIndex, emptyIndex);
+                emptyIndex = randomIndex;
+            }
+            
+            document.getElementById('winMessage').textContent = '';
+            createBoard();
+        }
+
+        function checkWin() {
+            const winCondition = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+            if (tiles.every((val, index) => val === winCondition[index])) {
+                document.getElementById('winMessage').textContent = 'Congratulations! You won!';
+            }
+        }
+
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
